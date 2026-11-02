@@ -1,0 +1,53 @@
+# PostgreSQL database and S3-compatible file storage (MinIO).
+#   docker compose -f docker-compose.postgres.yml up -d
+# Change the passwords below (or set them in .env) before going live.
+services:
+  whiteboard:
+    build: .
+    image: technical-whiteboard
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgres://whiteboard:${POSTGRES_PASSWORD:-change-me}@postgres:5432/whiteboard
+      STORAGE: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: whiteboard
+      S3_ACCESS_KEY_ID: whiteboard
+      S3_SECRET_ACCESS_KEY: ${MINIO_PASSWORD:-change-me-too}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: whiteboard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: whiteboard
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U whiteboard"]
+      interval: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: whiteboard
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-change-me-too}
+    volumes:
+      - minio-data:/data
+
+volumes:
+  postgres-data:
+  minio-data:
