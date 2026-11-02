@@ -95,8 +95,9 @@ export function getMath(latex: string, color: string, display: boolean, resoluti
   const key = `${display ? 'D' : 'I'}|${color}|${resolution}|${latex}`;
   let entry = mathCache.get(key);
   if (!entry) {
-    const result = mathjax.renderSvg(latex, display, color, resolution * 40);
-    entry = { img: null, width: result.width / 40, height: result.height / 40, depth: result.depth / 40, error: result.error };
+    const px = resolution * 40;
+    const result = mathjax.renderSvg(latex, display, color, px);
+    entry = { img: null, width: result.width / px, height: result.height / px, depth: result.depth / px, error: result.error };
     const img = new Image();
     const e = entry;
     track(

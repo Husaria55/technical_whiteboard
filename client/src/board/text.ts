@@ -117,15 +117,16 @@ export function drawText(ctx: CanvasRenderingContext2D, o: TextObj, color: strin
   ctx.font = fontFor(o);
   ctx.fillStyle = color;
   ctx.textBaseline = 'alphabetic';
-  const res = mathResolution(pixelsPerUnit * s * o.fontSize / 16);
+  const res = mathResolution((pixelsPerUnit * s * o.fontSize) / 40);
   let y = 0;
   for (const line of layout.lines) {
     for (const seg of line.segments) {
       if (seg.kind === 'math') {
         const m = getMath(seg.value, color, false, res);
-        if (m?.img) {
+        const img = m?.img ?? getMath(seg.value, color, false)?.img;
+        if (m && img) {
           const h = m.height * o.fontSize;
-          ctx.drawImage(m.img, seg.x, y + line.baseline - h + m.depth * o.fontSize, seg.width, h);
+          ctx.drawImage(img, seg.x, y + line.baseline - h + m.depth * o.fontSize, seg.width, h);
         } else {
           ctx.globalAlpha = 0.5;
           ctx.fillText(seg.value, seg.x, y + line.baseline);

@@ -257,12 +257,15 @@ export function drawObject(ctx: CanvasRenderingContext2D, o: BoardObject, env: R
       drawText(ctx, o, color, env.pixelsPerUnit);
       break;
     case 'math': {
-      const res = mathResolution((env.pixelsPerUnit * o.h) / 40);
-      const m = getMath(o.latex, color, true, res);
-      if (m?.img) {
-        ctx.drawImage(m.img, 0, 0, o.w, o.h);
+      const base = getMath(o.latex, color, true);
+      const res = base ? mathResolution((env.pixelsPerUnit * o.h) / Math.max(base.height * 40, 1)) : 1;
+      // Fall back to the low-resolution image while a sharper one loads.
+      const m = res > 1 ? getMath(o.latex, color, true, res) : base;
+      const img = m?.img ?? base?.img;
+      if (img) {
+        ctx.drawImage(img, 0, 0, o.w, o.h);
       } else {
-        placeholder(ctx, o.w, o.h, color, m?.error ? 'LaTeX error' : '…');
+        placeholder(ctx, o.w, o.h, color, base?.error ? 'LaTeX error' : '…');
       }
       break;
     }
@@ -294,7 +297,7 @@ function placeholder(ctx: CanvasRenderingContext2D, w: number, h: number, color:
 }
 
 /** Math objects store a box sized from the rendered formula at this font size. */
-export const MATH_FONT_SIZE = 40;
+export const MATH_FONT_SIZE = 32;
 
 /** Natural size of a math object, or null while MathJax loads. */
 export function mathSize(latex: string, scale = 1): { w: number; h: number; error?: string } | null {

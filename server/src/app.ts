@@ -296,9 +296,15 @@ export async function buildApp(config: Config, db: Db): Promise<{ app: FastifyIn
   // ---------- Static client ----------
 
   if (fs.existsSync(path.join(config.publicDir, 'index.html'))) {
-    await app.register(fastifyStatic, { root: config.publicDir, wildcard: false });
+    await app.register(fastifyStatic, {
+      root: config.publicDir,
+      // Hashed build assets never change; the HTML shell must always be fresh.
+      setHeaders: (reply: FastifyReply, filePath: string) => {
+        reply.header('Cache-Control', filePath.includes(`${path.sep}assets${path.sep}`) ? 'public, max-age=31536000, immutable' : 'no-cache');
+      },
+    });
     app.setNotFoundHandler((req, reply) => {
-      if (req.url.startsWith('/api/')) return reply.status(404).send({ error: 'Not found' });
+      if (req.url.startsWith('/api/') || req.url.startsWith('/assets/')) return reply.status(404).send({ error: 'Not found' });
       return reply.type('text/html').sendFile('index.html');
     });
   }

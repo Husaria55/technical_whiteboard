@@ -11,10 +11,13 @@ export function TextEditor({ editor, ui }: { editor: Editor; ui: UiState }) {
   const fontPx = t.fontSize * ui.camera.zoom;
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.focus();
-    el.setSelectionRange(el.value.length, el.value.length);
+    const frame = requestAnimationFrame(() => {
+      const el = ref.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [t.id]);
 
   // Grow with content.

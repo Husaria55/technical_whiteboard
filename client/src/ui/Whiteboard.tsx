@@ -132,7 +132,12 @@ export function Whiteboard({
           <canvas
             ref={canvasRef}
             className="board-canvas"
-            onPointerDown={(e) => editor.onPointerDown(e.nativeEvent)}
+            onPointerDown={(e) => {
+              // Stops the follow-up mousedown from moving focus (e.g. out of a new text box).
+              e.preventDefault();
+              (document.activeElement as HTMLElement | null)?.blur?.();
+              editor.onPointerDown(e.nativeEvent);
+            }}
             onPointerMove={(e) => editor.onPointerMove(e.nativeEvent)}
             onPointerUp={(e) => editor.onPointerUp(e.nativeEvent)}
             onPointerCancel={(e) => editor.onPointerUp(e.nativeEvent)}
